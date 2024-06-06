@@ -14,7 +14,7 @@ func main() {
 	lambda.Start(handler)
 }
 
-func handler(request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
+func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	log.Print("Hello World")
 
 	reqBytes, err := json.Marshal(request)
