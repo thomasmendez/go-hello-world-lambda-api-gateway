@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for personal-website-backend-stg
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 128
+    LoggingConfig:
+      LogFormat: JSON
+  Api:
+    Cors:
+      AllowMethods: "'*'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"
+Resources:
+  ServerlessRestApiDev:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Dev
+      Auth:
+        DefaultAuthorizer: MyLambdaTokenAuthorizer
+        Authorizers:
+          MyLambdaTokenAuthorizer:
+            FunctionArn: !GetAtt MyAuthFunction.Arn
+  RestApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: bootstrap
+      Runtime: provided.al2023
+      Architectures: [arm64]
+      Events:
+        CatchAll:
+          Type: Api 
+          Properties:
+            Path: "/api/{proxy+}"
+            Method: ANY
+            RestApiId: !Ref ServerlessRestApiDev
+      Environment:
+        Variables:
+          REGION: us-east-2
+  FunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${RestApiFunction}
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub ${AWS::StackName}-userPool
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      AutoVerifiedAttributes:
+        - email
+      AliasAttributes:
+        - email
+  AppClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      AllowedOAuthFlows: 
+        - implicit
+      AllowedOAuthScopes: 
+        - aws.cognito.signin.user.admin
+        - email
+        - openid
+        - profile
+      AllowedOAuthFlowsUserPoolClient: true
+      ClientName: api-app-client
+      CallbackURLs:
+        - !Sub https://${MyAPI}.execute-api.${AWS::Region}.amazonaws.com
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      UserPoolId: !Ref UserPool
+      SupportedIdentityProviders:
+        - COGNITO 
+  HostedUI:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties: 
+      Domain: !Join
+        - '-'
+        - - !Ref MyAPI
+          - !Ref AppClient
+      UserPoolId: !Ref UserPool
+  
+Outputs:
+  GoHelloWorldLambdaGatewayCognitoAPI:
+    Description: API Gateway endpoint URL for Dev environment for First Function
+    Value: !Sub "https://${ServerlessRestApiDev}.execute-api.${AWS::Region}.amazonaws.com/${ServerlessRestApiDev.Stage}/"
+  RestApiFunction:
+    Description: First Lambda Function ARN
+    Value: !GetAtt RestApiFunction.Arn
+  RestApiFunctionIamRole:
+    Description: Implicit IAM Role created for Hello World function
+    Value: !GetAtt RestApiFunctionRole.Arn
+  SignupURL:
+    Value: !Sub https://${HostedUI}.auth.${AWS::Region}.amazoncognito.com/login?client_id=${AppClient}&response_type=token&scope=email+profile&redirect_uri=https://${MyAPI}.execute-api.${AWS::Region}.amazonaws.com

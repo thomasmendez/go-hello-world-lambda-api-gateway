@@ -20,3 +20,11 @@
 # Go workspace file
 go.work
 go.work.sum
+
+# aws sam
+samconfig.toml
+.aws-sam
+
+# temp files
+bootstrap
+lambda-handler.zip

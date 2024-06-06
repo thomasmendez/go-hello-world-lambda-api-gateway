@@ -1,0 +1,18 @@
+meta {
+  name: postName
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://127.0.0.1:3000/api/test
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "firstName": "John",
+    "lastName": "Doe"
+  }
+}
