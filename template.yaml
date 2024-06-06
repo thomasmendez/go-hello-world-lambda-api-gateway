@@ -15,15 +15,6 @@ Globals:
       AllowHeaders: "'*'"
       AllowOrigin: "'*'"
 Resources:
-  ServerlessRestApiDev:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: Dev
-      Auth:
-        DefaultAuthorizer: MyLambdaTokenAuthorizer
-        Authorizers:
-          MyLambdaTokenAuthorizer:
-            FunctionArn: !GetAtt MyAuthFunction.Arn
   RestApiFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -45,44 +36,6 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       LogGroupName: !Sub /aws/lambda/${RestApiFunction}
-  UserPool:
-    Type: AWS::Cognito::UserPool
-    Properties:
-      UserPoolName: !Sub ${AWS::StackName}-userPool
-      AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: true
-      AutoVerifiedAttributes:
-        - email
-      AliasAttributes:
-        - email
-  AppClient:
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      AllowedOAuthFlows: 
-        - implicit
-      AllowedOAuthScopes: 
-        - aws.cognito.signin.user.admin
-        - email
-        - openid
-        - profile
-      AllowedOAuthFlowsUserPoolClient: true
-      ClientName: api-app-client
-      CallbackURLs:
-        - !Sub https://${MyAPI}.execute-api.${AWS::Region}.amazonaws.com
-      ExplicitAuthFlows:
-        - ALLOW_USER_PASSWORD_AUTH
-        - ALLOW_REFRESH_TOKEN_AUTH
-      UserPoolId: !Ref UserPool
-      SupportedIdentityProviders:
-        - COGNITO 
-  HostedUI:
-    Type: AWS::Cognito::UserPoolDomain
-    Properties: 
-      Domain: !Join
-        - '-'
-        - - !Ref MyAPI
-          - !Ref AppClient
-      UserPoolId: !Ref UserPool
   
 Outputs:
   GoHelloWorldLambdaGatewayCognitoAPI:
@@ -94,5 +47,3 @@ Outputs:
   RestApiFunctionIamRole:
     Description: Implicit IAM Role created for Hello World function
     Value: !GetAtt RestApiFunctionRole.Arn
-  SignupURL:
-    Value: !Sub https://${HostedUI}.auth.${AWS::Region}.amazoncognito.com/login?client_id=${AppClient}&response_type=token&scope=email+profile&redirect_uri=https://${MyAPI}.execute-api.${AWS::Region}.amazonaws.com
