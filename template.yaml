@@ -15,6 +15,10 @@ Globals:
       AllowHeaders: "'*'"
       AllowOrigin: "'*'"
 Resources:
+  ServerlessRestApiDev:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Dev
   RestApiFunction:
     Type: AWS::Serverless::Function
     Properties:
