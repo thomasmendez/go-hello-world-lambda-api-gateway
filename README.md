@@ -17,7 +17,7 @@ Simple Go API Gateway Example with AWS SAM Template
     GOARCH=arm64 GOOS=linux go build -o bootstrap main.go
     ```
 
-2. **Zip project (windows)**
+2. **Zip project (Windows)**
 
     `C:\Users\owner\go\bin\build-lambda-zip.exe -o lambda-handler.zip bootstrap` using the provided `build-lambda-zip` package. If needed, you can install with `go install github.com/aws/aws-lambda-go/cmd/build-lambda-zip@latest`. See [To create a .zip deployment package (Windows)](https://docs.aws.amazon.com/lambda/latest/dg/golang-package.html)
 
