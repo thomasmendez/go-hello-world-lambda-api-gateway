@@ -34,6 +34,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 
 	if err != nil {
 		return events.APIGatewayProxyResponse{
+			Headers:    addProxyHeaders(),
 			StatusCode: http.StatusInternalServerError,
 			Body:       fmt.Sprintf("Error in unmarshal: %v", err),
 		}, err
@@ -49,15 +50,29 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 
 	if err != nil {
 		return events.APIGatewayProxyResponse{
+			Headers:    addProxyHeaders(),
 			StatusCode: http.StatusInternalServerError,
 			Body:       fmt.Sprintf("Error in marshalling: %v", err),
 		}, err
 	}
 
 	return events.APIGatewayProxyResponse{
+		Headers: map[string]string{
+			"Access-Control-Allow-Origin":  "*",
+			"Access-Control-Allow-Headers": "*",
+			"Access-Control-Allow-Methods": "*",
+		},
 		StatusCode: http.StatusOK,
 		Body:       string(responseJson),
 	}, nil
+}
+
+func addProxyHeaders() map[string]string {
+	return map[string]string{
+		"Access-Control-Allow-Origin":  "*",
+		"Access-Control-Allow-Headers": "*",
+		"Access-Control-Allow-Methods": "*",
+	}
 }
 
 type Person struct {
